@@ -1,50 +1,186 @@
-# React + TypeScript + Vite
+A brief walkthrough on how to set up Vite (TypeScript Template), Vitest, and React Testing Library.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[Article](https://johnsmilga.com/articles/2024/10/15)
 
-Currently, two official plugins are available:
+## Vitest
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+In your command line, create a new Vite project and choose the React with TypeScript option.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm create vite@latest
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Next, open up the integrated terminal and install Vitest.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npm install vitest --save-dev
 ```
+
+Add the test script to your package.json:
+
+```json
+"scripts": {
+    "test": "vitest"
+  },
+```
+
+Create a test file, e.g., random.test.ts, in your project. Make sure you add the suffix "test" — in my case, I will do it in the src directory.
+
+```ts
+import { describe, it, expect } from 'vitest';
+
+describe('basic arithmetic checks', () => {
+  it('1 + 1 equals 2', () => {
+    expect(1 + 1).toBe(2);
+  });
+
+  it('2 * 2 equals 4', () => {
+    expect(2 * 2).toBe(4);
+  });
+});
+```
+
+Run the test:
+
+```bash
+npm run test
+```
+
+If everything is correct, your test should pass. You should not see any errors in your terminal, and everything should be green 😀. Since I want to focus on the setup in this article, we won’t spend time on the actual commands. The plan is to cover testing code in one of the later articles.
+
+## React Testing Library
+
+Since we want to test our React components, we need to install React Testing Library and other dependencies. Stop the test by pressing Ctrl + C and install the following dependencies:
+
+```bash
+npm install @testing-library/react @testing-library/jest-dom --save-dev
+```
+
+```bash
+npm install jsdom --save-dev
+```
+
+Add the test object to vite.config.ts:
+
+```ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+  },
+});
+```
+
+If you have red squiggly lines in your vite.config.ts file, no worries — it’s because we are using TypeScript, and we will fix it very soon.
+
+After that, we want to create a setup file. In the root directory, create vitest.setup.ts and add the following code:
+
+vitest.setup.ts
+
+```ts
+import { expect, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import * as matchers from '@testing-library/jest-dom/matchers';
+
+expect.extend(matchers);
+
+afterEach(() => {
+  cleanup();
+});
+```
+
+Make some changes in the vite.config.ts file:
+
+```ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './vitest.setup.ts',
+  },
+});
+```
+
+Lastly, to fix the TypeScript errors, we need to change the import in our vite.config.ts file. Now we need to import defineConfig from vitest/config:
+
+```ts
+import { defineConfig } from 'vitest/config';
+```
+
+We also need to add the following code to our tsconfig.app.json file, which allows us to use Vitest's global functions like describe, it, and expect without needing to import them explicitly. If you’re wondering about the @testing-library/jest-dom, it’s because we want to use the custom matchers provided by the library globally as well.
+
+tsconfig.app.json
+
+```json
+{
+  "compilerOptions": {
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+  }
+}
+```
+
+Now we are ready to test our React components with React Testing Library and Vitest. Create a new file, e.g., Random.tsx, in your project and add the following code:
+
+src/Random.tsx
+
+```tsx
+const Random = () => {
+  return <div>Random Component</div>;
+};
+export default Random;
+```
+
+After that, create a tests directory in the src folder and add a Random.test.tsx file with the following code:
+
+src/**tests**/Random.test.tsx
+
+```tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import Random from '../Random';
+
+describe('Random Component', () => {
+  it('renders correctly', () => {
+    render(<Random />);
+    screen.debug(); // Logs the DOM structure
+    const element = screen.getByText('Random Component');
+    expect(element).toBeInTheDocument();
+  });
+});
+```
+
+That's it for the setup. Now you can run the test by typing npm run test in your terminal. If everything is correct, you should see the following output:
+
+```bash
+
+  <body>
+  <div>
+    <div>
+      Random Component
+    </div>
+  </div>
+</body>
+
+ ✓ src/random.test.ts (2)
+ ✓ src/__tests__/Random.test.tsx (1)
+
+ Test Files  2 passed (2)
+      Tests  3 passed (3)
+   Start at  15:17:47
+   Duration  334ms (transform 22ms, setup 128ms, collect 14ms, tests 14ms, environment 281ms, prepare 53ms)
+
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit
+```
+
+Happy testing! 🎉
