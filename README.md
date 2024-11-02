@@ -53,11 +53,18 @@ If everything is correct, your test should pass. You should not see any errors i
 Since we want to test our React components, we need to install React Testing Library and other dependencies. Stop the test by pressing Ctrl + C and install the following dependencies:
 
 ```bash
+# Core testing utilities for React components
 npm install @testing-library/react @testing-library/jest-dom --save-dev
 ```
 
 ```bash
+# Simulates a browser-like environment for tests to run in Node.js
 npm install jsdom --save-dev
+```
+
+```bash
+# Simulates user interactions (clicks, typing, etc.) in tests
+npm install @testing-library/user-event --save-dev
 ```
 
 Add the test object to vite.config.ts:
