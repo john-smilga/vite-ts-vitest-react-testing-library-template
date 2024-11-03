@@ -86,7 +86,7 @@ If you have red squiggly lines in your vite.config.ts file, no worries — it’
 
 After that, we want to create a setup file. In the root directory, create vitest.setup.ts and add the following code:
 
-vitest.setup.ts
+src/vitest.setup.ts
 
 ```ts
 import { expect, afterEach } from 'vitest';
@@ -112,7 +112,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './vitest.setup.ts',
+    setupFiles: './src/vitest.setup.ts',
   },
 });
 ```
